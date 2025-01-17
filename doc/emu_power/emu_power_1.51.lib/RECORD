@@ -1,0 +1,11 @@
+emu_power-1.51.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+emu_power-1.51.dist-info/LICENSE,sha256=UbFSpDsc9Uixvn3MY4vzag6NYGB59tOuCg-WzNO2h1M,1073
+emu_power-1.51.dist-info/METADATA,sha256=HULhXqaGH4UHWjGxbSxbGe9H6JlBVeBSJAwDYuRrEPQ,3646
+emu_power-1.51.dist-info/RECORD,,
+emu_power-1.51.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+emu_power-1.51.dist-info/WHEEL,sha256=EVRjI69F5qVjm_YgqcTXPnTAv3BfSUr0WVAHuSP3Xoo,92
+emu_power-1.51.dist-info/top_level.txt,sha256=rTObYBQ79Kq56FnKa0oRUTSoFQWe8FQzgvp2j1PpElU,10
+emu_power/__init__.py,sha256=BfHt4WP47doB-VgFa_VcK8lhyl7I1dlh9uvaiTcnX90,11841
+emu_power/__pycache__/__init__.cpython-39.pyc,,
+emu_power/__pycache__/response_entities.cpython-39.pyc,,
+emu_power/response_entities.py,sha256=ZZ-MvQ_H72-EGtZWeQCim20OYe5LImYHitpjrFuzh64,8715

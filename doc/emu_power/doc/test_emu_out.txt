@@ -1,0 +1,129 @@
+==> Instantiate api with Emu(synchronous=True)
+
+==> api.start_serial() ...
+
+==> response = api.get_device_info() ...
+<Command><Name>get_device_info</Name></Command>
+<Demand>0x0001ef</Demand>
+  
+Unsupported tag Demand
+<Multiplier>0x00000003</Multiplier>
+Unsupported tag Multiplier
+<DeviceInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <InstallCode>0x48fa2d87a8ff7aed</InstallCode>
+  <LinkKey>0x537ac2b9bff83daf3f66b86683387e2d</LinkKey>
+  <FWVersion>2.0.0 (7400)</FWVersion>
+  <HWVersion>2.7.3</HWVersion>
+  <ImageType>0x2201</ImageType>
+  <Manufacturer>Rainforest Automation, Inc.</Manufacturer>
+  <ModelId>Z105-2-EMU2-LEDD_JM</ModelId>
+  <DateCode>20220131356a0605</DateCode>
+</DeviceInfo>
+
+==> response = api.get_connection_status() ...
+<Command><Name>get_connection_status</Name></Command>
+<ConnectionStatus>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Status>Connected</Status>
+  <Description>Successfully Joined</Description>
+  <ExtPanId>0x001c640013416a8c</ExtPanId>
+  <Channel>15</Channel>
+  <ShortAddr>0x7ee5</ShortAddr>
+  <LinkStrength>0x64</LinkStrength>
+</ConnectionStatus>
+
+==> response = api.get_schedule() ...
+<Command><Name>get_schedule</Name></Command>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>time</Event>
+  <Frequency>0x00000384</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>summation</Event>
+  <Frequency>0x000000f0</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>billing_period</Event>
+  <Frequency>0x00000708</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>block_period</Event>
+  <Frequency>0x00000708</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>message</Event>
+  <Frequency>0x000000f0</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>price</Event>
+  <Frequency>0x0000005a</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>scheduled_prices</Event>
+  <Frequency>0x0000005a</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+<ScheduleInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Mode>rest</Mode>
+  <Event>demand</Event>
+  <Frequency>0x0000000f</Frequency>
+  <Enabled>Y</Enabled>
+</ScheduleInfo>
+
+==> response = api.get_meter_info() ...
+<Command><Name>get_meter_info</Name></Command>
+<MeterInfo>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <Type>0x0000</Type>
+  <Nickname />
+  <Account />
+  <Auth />
+  <Host />
+  <Enabled>Y</Enabled>
+</MeterInfo>
+
+==> response = api.get_instantaneous_demand() ...
+<Command><Name>get_instantaneous_demand</Name><Refresh>Y</Refresh></Command>
+<InstantaneousDemand>
+  <DeviceMacId>0xd8d5b90000011bf7</DeviceMacId>
+  <MeterMacId>0x001c640013416a8c</MeterMacId>
+  <TimeStamp>0x29cbae71</TimeStamp>
+  <Demand>0x000260</Demand>
+  <Multiplier>0x00000003</Multiplier>
+  <Divisor>0x000003e8</Divisor>
+  <DigitsRight>0x03</DigitsRight>
+  <DigitsLeft>0x05</DigitsLeft>
+  <SuppressLeadingZero>Y</SuppressLeadingZero>
+</InstantaneousDemand>

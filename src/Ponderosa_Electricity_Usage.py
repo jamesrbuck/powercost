@@ -258,7 +258,7 @@ def main():
          #fdays.write(the_date_last + "\t" + str(kWh_day) + "\n")
          #fdays.flush()
          runDays = runDays + 1
-         print("\n==> New day: run_days=" + str(runDays) + ", Date=" + the_date + ", loop_counter=" + str(loop_counter))
+         print("\n==> New day: run_days=" + str(runDays) + ", Date=" + the_date + ", loop_counter=" + str(loop_counter) + " " + time.strftime('%m/%d/%Y %H:%M:%S') )
          sys.stdout.flush()
          sys.stderr.flush()
          itsMidnight = False  # Reset flag

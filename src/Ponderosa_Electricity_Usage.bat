@@ -1,5 +1,7 @@
 echo off
 
+set PATH=D:\git\powercost\src:%PATH%
+
 rem ---------------------------------------------------------------------------
 rem Make sure hour has leading zero
 rem ---------------------------------------------------------------------------
@@ -32,4 +34,5 @@ rem Run Program
 rem ---------------------------------------------------------------------------
 D:\Python\pythonw.exe D:\a\EMU-2\code\Ponderosa_Electricity_Usage.py --ini D:\a\EMU-2\code\Ponderosa_Electricity_Usage.ini %1 > %log% 2>&1
 
-EXIT 0
+pause
+exit 0
