@@ -32,7 +32,8 @@ echo on
 rem ---------------------------------------------------------------------------
 rem Run Program
 rem ---------------------------------------------------------------------------
-D:\Python\pythonw.exe D:\a\EMU-2\code\Ponderosa_Electricity_Usage.py --ini D:\a\EMU-2\code\Ponderosa_Electricity_Usage.ini %1 > %log% 2>&1
+set basedir=D:\git\powercost
+D:\Python\pythonw.exe %basedir%\src\Ponderosa_Electricity_Usage.py --ini %basedir%\src\Ponderosa_Electricity_Usage.ini %1 > %log% 2>&1
 
 pause
 exit 0
