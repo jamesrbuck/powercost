@@ -47,8 +47,5 @@ class PonderosaConfig:
     def getthe_port(self):
         return(self.the_port)
 
-    def getout_dir(self):
-        return(self.out_dir)
-
     def getdbConfig(self):
         return(self.dbConfig)

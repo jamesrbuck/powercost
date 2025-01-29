@@ -6,16 +6,35 @@ import sys
 import os
 import decimal
 import argparse
-
+import signal
 from time import time, ctime
 import time
+
 from xmlrpc.client import boolean
 from emu_power import Emu
 
 from PonderosaConfig import PonderosaConfig
 from PonderosaDB import PonderosaDB
-from PonderosaErrorHandler import PonderosaErrorHandler
 
+class PonderosaErrorHandler:
+    def __init__(self,thePID,theAR):
+        signal.signal(signal.SIGINT, self.catch)
+        self.PID = thePID
+        self.AR = theAR
+    def catch(self, signalNumber, frame):
+        mytime = time.localtime()
+        print( f"\n==> PonderosaErrorHandler.py: Error Handler Entered.\n   Catching signal {str(signalNumber)} at {time.strftime('%H:%M:%S', mytime)}")
+        if (os.path.exists(self.AR)):  # Remove "We are running" indicator file.
+            print( f"   PonderosaErrorHandler.py: Removing file {self.AR}")
+            os.remove(self.AR)
+        else:
+            print( f"   PonderosaErrorHandler.py: File does not exist: {self.AR}")
+
+      # FINAL KILL: 21 = SIGBREAK) to kill sleep()
+        print( "   PonderosaErrorHandler.py: Executing os.kill(" + str(self.PID) + ",21) or SIGBREAK")
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.kill(self.PID,21)  # Kill SIGBREAK this process in sleep()
 
 # =============================================================================
 #                            M A I N   P R O G R A M
@@ -27,11 +46,7 @@ def main():
     stderr_old = sys.stderr
     the_port = ""
     alreadyRunning = ""
-
-    # Setup signal handler for abnormal or Ctrl-C exit
-    mysig = PonderosaErrorHandler(PID,alreadyRunning)
-
-    api = ""
+    emu_api = ""
     f = ""
 
     # Parse Command Line Arguments
@@ -54,8 +69,7 @@ def main():
     PC = PonderosaConfig(INI,startTS)
     log_dir  = PC.getlog_dir()
     log_file = PC.getlog_file()
-    out_file = PC.getout_file()
-    out_dir  = PC.getout_dir()
+    the_port = PC.getthe_port()
 
     # Stop execution if this file is found
     stopFile = log_dir + "\\" + "stop.txt"
@@ -65,6 +79,9 @@ def main():
     # CHECK: Are we currently running?
     # ================================
     alreadyRunning = log_dir + "\\" + "Ponderosa_Electricity_Usage.running"
+    # Setup signal handler for abnormal or Ctrl-C exit
+    mysig = PonderosaErrorHandler(PID,alreadyRunning)
+
     if (force):  # Used to force start like in a Windows Scheduled Task
         if (os.path.exists(alreadyRunning)):
             os.remove(alreadyRunning)
@@ -104,14 +121,23 @@ def main():
     # --------------------------------------------------------------------------
     # Try to start serial connection to EMU
     # --------------------------------------------------------------------------
-    api = Emu(debug=False,fresh_only=True,timeout=5,synchronous=True)
-    startedOK = api.start_serial(the_port)
-    i  = 1
-    while (not startedOK):
+    while (True):
+        emu_api = Emu(debug=False,fresh_only=True,timeout=5,synchronous=True)
+        EMU_Started = emu_api.start_serial(the_port)
+        time.sleep(5)  # Wait for serial device to respond
+        if (EMU_Started is not None):
+            mytime = time.localtime()
+            print("==> [Start] emu_api.start_serial on \"" + the_port + "\" at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
+            break
+
+        i  = 1
         mytime = time.localtime()
-        print("==> [Start] api.start_serial on " + the_port + " failure #" + str(i) + " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
+        print("==> [Start] emu_api.start_serial on \"" + the_port + "\" failure #" + str(i) + " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
         sys.stdout.flush()
         sys.stderr.flush()
+
+        # Exit situation: we exceeded the number of attempts
+        # --------------------------------------------------
         if (i >= 20):
             sys.stdout.flush()
             sys.stderr.flush()
@@ -120,19 +146,16 @@ def main():
             if (os.path.exists(alreadyRunning)):
                 os.remove(alreadyRunning)
             mytime = time.localtime()
-            print("==> [Start] api.start_serial failed on " + the_port +  " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
-            sys.exit(1)
+            errmsg = f"emu_api.start_serial failed on \"{the_port}\" at {time.strftime('%m/%d/%Y %H:%M:%S', mytime)}"
+            raise Exception(errmsg)
         time.sleep(5)
-        startedOK = api.start_serial(the_port)
         i = i + 1
 
     # --------------------------------------------------------------------------
     # Connection successful, print startup banner
     # --------------------------------------------------------------------------
-    mytime = time.localtime()
-    print("==> [Start] api.start_serial on " + the_port + " succeeded at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
-
-    response = api.get_device_info()
+    response = emu_api.get_device_info()
+    time.sleep(5)
     print("Manufacturer:      " + response.manufacturer)
     print("Model ID:          " + response.model_id)
     print("Install Code:      " + response.install_code)
@@ -142,17 +165,11 @@ def main():
     print("Image Type:        " + response.fw_image_type)
     print("Date Code:         " + response.date_code)
 
-    response = api.get_meter_info()
+    response = emu_api.get_meter_info()
     print("Meter Mac ID:      " + response.meter_mac + "\n\n")
 
     sys.stdout.flush()
     sys.stderr.flush()
-
-    out_path = out_dir + "\\" + out_file
-    print("\n==> Sending hour output to " + out_path)
-    f = open(out_path,"a")
-    f.write("Date\tTime\tkWh\n")
-    f.flush()
 
 
     # --------------------------------------------------------------------------
@@ -178,18 +195,17 @@ def main():
     minute_counter = 0
     minute_sumkw = 0
     the_hour_last = -1
-    the_date_last = "FIRST_LOOP_INTERATION"
-    the_date_last_db = "FIRST_LOOP_INTERATION"
 
     kWh_day = 0
 
     # ==========================================================================
     # Main Loop
     # ==========================================================================
-    this_date = "<FIRST>"
-    prev_date = this_date
+    the_date_prev = "FIRST_LOOP_INTERATION"
+    the_date_prev_db = "FIRST_LOOP_INTERATION"
     while True:
         if (os.path.exists(stopFile)):
+            print("Stop file does exist, exiting.")
             sys.exit(0)
 
         loop_counter = loop_counter + 1
@@ -201,26 +217,24 @@ def main():
         the_date_db = time.strftime('%Y-%m-%d', mytime)
         the_hour    = int(time.strftime('%H', mytime))
 
-        # For midnight comparsion
-        if prev_date == "<FIRST>":
-            prev_date = this_date
-        this_date = the_date
-
-        checkResponse = True
+        keepTrying = True
         i = 0
-        while (checkResponse):
+        while (keepTrying):
             i = i + 1
-            response = api.get_instantaneous_demand()
+            response = emu_api.get_instantaneous_demand()
+            time.sleep(5)
             if (response is None):
-                print("==> Call to api.get_instantaneous_demand() failed! #" + str(i) + " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
-                checkResponse = True
-            else:
+                print(f"==> Call to emu_api.get_instantaneous_demand() failed! #{str(i)} at {time.strftime('%m/%d/%Y %H:%M:%S', mytime)}")
+                sys.stdout.flush()
+                sys.stderr.flush()
                 if (i == 15):
-                    checkResponse = False  # Give up - too many tries
+                    keepTrying = False  #  Loop Done: Give up - too many tries
                 else:
-                    time.sleep(60)
+                    time.sleep(10)  # Loop NOT Done: Try again
+            else:
+                keepTrying = False  # Loop Done: Success
 
-        if (checkResponse):
+        if (keepTrying):
             sys.stdout.flush()
             sys.stderr.flush()
             sys.stdout = stdout_old
@@ -228,7 +242,9 @@ def main():
             if (os.path.exists(alreadyRunning)):
                 os.remove(alreadyRunning)
             mytime = time.localtime()
-            print("==> api.get_instantaneous_demand() failed COMPLETELY  at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
+            print("==> emu_api.get_instantaneous_demand() failed COMPLETELY  at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
+            sys.stdout.flush()
+            sys.stderr.flush()
             sys.exit(2)
 
         # Get kWh from 3 values
@@ -238,10 +254,13 @@ def main():
         kw           = decimal.Decimal(multiplier*(demand/divisor))
 
         # For first time through loop
-        if (the_date_last == "FIRST_LOOP_INTERATION"):
-            the_date_last = the_date
-        if (the_date_last_db == "FIRST_LOOP_INTERATION"):
-            the_date_last_db = the_date_db
+        if (the_date_prev == "FIRST_LOOP_INTERATION"):
+            the_date_prev = the_date
+        if (the_date_prev_db == "FIRST_LOOP_INTERATION"):
+            the_date_prev_db = the_date_db
+
+        sys.stdout.flush()
+        sys.stderr.flush()
 
         # Check if we're done with an hour.  If so print sum.
         # ===================================================
@@ -251,9 +270,9 @@ def main():
         else:  # (a) Hour has changed: Print summary for previous hour, or (b) First time through loop
             if (minute_counter > 0):
                 kWh = decimal.Decimal(minute_sumkw / minute_counter)
-                f.write(the_date_last + "[" + the_date_last_db + "]\t" + str(the_hour_last) + ":00\t" + str(kWh) + "\n")
-                f.flush()
-                DBC.insert(DBC,the_date_last_db,the_hour_last_db,kWh)
+                mytime = time.localtime()
+                print(f"==> DBC.Insert(): {time.strftime('%m/%d/%Y %H:%M:%S'} kWh={kWh}")
+                DBC.insert(the_date_prev_db,the_hour_last_db,kWh)
                 kWh_day += kWh
             minute_sumkw = kw  # Reset sum to current readung
             minute_counter = 1  # Reset counter
@@ -262,14 +281,14 @@ def main():
 
             # Stop and start once every hour
             # ===============================
-            api.stop_serial()
+            emu_api.stop_serial()
             time.sleep(5)
-            api = Emu(debug=False,fresh_only=True,timeout=5,synchronous=True)
-            startedOK = api.start_serial(the_port)
+            emu_api = Emu(debug=False,fresh_only=True,timeout=5,synchronous=True)
+            EMU_Started = emu_api.start_serial(the_port)
             i  = 1
-            while (not startedOK):
+            while (not EMU_Started):
                 mytime = time.localtime()
-                print("==> [Restart] api.start_serial on " + the_port + " failure #" + str(i) + " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
+                print("==> [Restart] emu_api.start_serial on \"" + the_port + "\" failure #" + str(i) + " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
             if (i >= 20):
                sys.stdout.flush()
                sys.stderr.flush()
@@ -278,28 +297,23 @@ def main():
                if (os.path.exists(alreadyRunning)):
                   os.remove(alreadyRunning)
                mytime = time.localtime()
-               print("==> [Restart] api.start_serial failed on " + the_port +  " at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
+               print("==> [Restart] emu_api.start_serial failed on \"" + the_port +  "\" at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
                sys.exit(1)
             time.sleep(2)
-            startedOK = api.start_serial(the_port)
+            EMU_Started = emu_api.start_serial(the_port)
             i = i + 1
             mytime = time.localtime()
-            # print("==> [Restart] api.start_serial on " + the_port + " succeeded at " + time.strftime('%m/%d/%Y %H:%M:%S', mytime))
 
         # Midnight Check
         # ==============
-        if this_date != prev_date:
-            #fdays.write(the_date_last + "\t" + str(kWh_day) + "\n")
-            #fdays.flush()
+        if (the_date != the_date_prev):
             runDays = runDays + 1
-            print("\n==> New day: run_days=" + str(runDays) + ", Date=" + the_date + ", loop_counter=" + str(loop_counter) + " " + time.strftime('%m/%d/%Y %H:%M:%S') )
+            print(f"\n==> New day detected: {the_date}; run_days={str(runDays)} at {time.strftime('%m/%d/%Y %H:%M:%S')}" )
             sys.stdout.flush()
             sys.stderr.flush()
             kWh_day = 0  # Reset Sum
-            the_date_last = the_date  # Update Last Date to Today
-            the_date_last_db = the_date_db  # Update Last Date to Today
-
-        prev_date = this_date  # save date for comparison for midnight check
+            the_date_prev = the_date  # Update Last Date to Today
+            the_date_prev_db = the_date_db  # Update Last Date to Today
 
         # Sleep until the top of the next minute which is probably
         # less than 60 seconds.  NOTE: SIGBREAK signal is used to
