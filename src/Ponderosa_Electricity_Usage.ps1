@@ -1,8 +1,6 @@
-# Set timestamp to be used in the backup log file.
+# Set timestamp to be used in the log file.
 $ts   = Get-Date -Format "yyyyMMdd-HHmm"
 $log = "D:\a\EMU-2\logs\launch_" + $ts + ".txt"
-$logpo = "D:\a\EMU-2\logs\launch_p_o_" + $ts + ".txt"
-$logpe = "D:\a\EMU-2\logs\launch_p_e_" + $ts + ".txt"
 
 # Run Program
 # -----------

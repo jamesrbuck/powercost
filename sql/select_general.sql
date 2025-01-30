@@ -11,6 +11,26 @@ order by
    UDate, UTime
 ;
 
+delete from pse.usage_e where ID >= 0;
+commit;
+select * from pse.usage_e;
+
+select
+   UDate as Date
+   ,ELT(dayofweek(UDate),'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday') as DoW
+   ,round(sum(kWh)/count(kWh),3) as kWh_Hr_avg
+   ,count(kWh) as hours
+   ,sum(kWh) as kWh_day_total
+   ,round(((sum(kWh)/count(kWh))*24*0.105),2) as kWh_day_total_cost
+from
+   pse.usage_e
+group by
+   UDate
+order by
+   UDate
+;
+
+
 
 -- ==========================================================================
 -- mysql> grant system_user on *.* to 'james'@'%';
