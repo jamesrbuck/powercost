@@ -271,7 +271,7 @@ def main():
             if (minute_counter > 0):
                 kWh = decimal.Decimal(minute_sumkw / minute_counter)
                 mytime = time.localtime()
-                print(f"==> DBC.Insert(): {time.strftime('%m/%d/%Y %H:%M:%S'} kWh={kWh}")
+                print(f"==> DBC.Insert(): {time.strftime('%m/%d/%Y %H:%M:%S')} kWh={kWh}")
                 DBC.insert(the_date_prev_db,the_hour_last_db,kWh)
                 kWh_day += kWh
             minute_sumkw = kw  # Reset sum to current readung
